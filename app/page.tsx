@@ -75,7 +75,7 @@ const phaseTone: Record<string, string> = {
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint: string }) {
   return (
-    <div className="rounded-2xl border bg-white/85 p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+    <div className="hairline rounded-2xl border bg-white/90 p-5 shadow-sm backdrop-blur">
       <div className="text-sm" style={{ color: "var(--color-muted)" }}>{label}</div>
       <div className="mt-2 text-3xl font-semibold tracking-tight">{value}</div>
       <div className="mt-2 text-xs" style={{ color: "var(--color-muted)" }}>{hint}</div>
@@ -83,10 +83,23 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
   );
 }
 
+function StepCard({ step, title, count, body, tone }: { step: string; title: string; count: number; body: string; tone: string }) {
+  return (
+    <div className="hairline rounded-3xl border bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${tone}`}>{step}</span>
+        <span className="text-2xl font-semibold">{count}</span>
+      </div>
+      <h3 className="mt-4 text-lg font-semibold">{title}</h3>
+      <p className="mt-2 text-sm leading-6" style={{ color: "var(--color-muted)" }}>{body}</p>
+    </div>
+  );
+}
+
 function BarList({ title, items }: { title: string; items: Count[] }) {
   const max = Math.max(...items.map((i) => i.count));
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+    <section className="hairline rounded-2xl border bg-white p-5 shadow-sm">
       <h2 className="text-lg font-semibold">{title}</h2>
       <div className="mt-4 space-y-3">
         {items.map((item) => (
@@ -108,7 +121,7 @@ function BarList({ title, items }: { title: string; items: Count[] }) {
 function MatrixTable({ title, description, matrix }: { title: string; description: string; matrix: Matrix }) {
   const max = Math.max(...matrix.values.flat());
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+    <section className="hairline rounded-2xl border bg-white p-5 shadow-sm">
       <div className="mb-4">
         <h2 className="text-xl font-semibold">{title}</h2>
         <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>{description}</p>
@@ -156,7 +169,7 @@ function ArticleBlock({ title, doc, keys, emptyText }: { title: string; doc?: Le
   }, [doc, keys]);
 
   return (
-    <section className="min-w-0 rounded-2xl border bg-white p-4" style={{ borderColor: "var(--color-border)" }}>
+    <section className="hairline min-w-0 rounded-2xl border bg-white p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold">{title}</h3>
@@ -168,11 +181,14 @@ function ArticleBlock({ title, doc, keys, emptyText }: { title: string; doc?: Le
         {!doc && <div className="rounded-xl bg-stone-50 p-4 text-sm text-stone-500">{emptyText}</div>}
         {doc && selected.length === 0 && <div className="rounded-xl bg-stone-50 p-4 text-sm text-stone-500">매칭된 조문 키가 없습니다. 법령 전문은 데이터에 수록되어 있습니다.</div>}
         {selected.map((a) => (
-          <article key={a.key} className="rounded-xl bg-stone-50 p-4">
-            <div className="text-sm font-semibold">{a.label}{a.title ? `(${a.title})` : ""}</div>
-            {a.body && <p className="mt-3 whitespace-pre-wrap text-sm leading-7">{a.body}</p>}
+          <article key={a.key} className="rounded-xl bg-stone-50 p-4 ring-1 ring-stone-100">
+            <div className="flex flex-wrap items-baseline gap-2 text-sm font-semibold">
+              <span>{a.label}</span>
+              {a.title && <span className="text-stone-500">{a.title}</span>}
+            </div>
+            {a.body && <p className="law-text mt-3 whitespace-pre-wrap text-sm leading-7">{a.body}</p>}
             {a.paragraphs?.length > 0 && (
-              <div className="mt-3 space-y-2 text-sm leading-7">
+              <div className="law-text mt-3 space-y-2 text-sm leading-7">
                 {a.paragraphs.slice(0, 8).map((para, idx) => (
                   <div key={`${a.key}-${idx}`}>
                     <p>{para.number} {para.text}</p>
@@ -191,7 +207,7 @@ function ArticleBlock({ title, doc, keys, emptyText }: { title: string; doc?: Le
 function EvidenceCompare({ record }: { record: RecordItem }) {
   const entry = legalTexts[record.law];
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+    <section className="hairline rounded-3xl border bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-accent)" }}>원문 대조 패널</div>
@@ -204,10 +220,13 @@ function EvidenceCompare({ record }: { record: RecordItem }) {
         <ArticleBlock title="법률 원문" doc={entry?.lawDoc} keys={record.lawArticleKeys || []} emptyText="법률 원문을 불러오지 못했습니다." />
         <ArticleBlock title="시행령 원문" doc={entry?.decreeDoc} keys={record.decreeArticleKeys || []} emptyText={record.decreeGroup === "시행령 위임규정 없음" ? "이 사무는 시행령 위임규정 없음으로 분류되었습니다." : "시행령 원문 또는 매칭 조문을 불러오지 못했습니다."} />
       </div>
-      <div className="mt-4 grid gap-3 text-xs lg:grid-cols-2" style={{ color: "var(--color-muted)" }}>
-        <div className="rounded-xl bg-stone-50 p-3"><b>법률 근거 발췌</b><br />{record.lawEvidence || "-"}</div>
-        <div className="rounded-xl bg-stone-50 p-3"><b>시행령 근거 발췌</b><br />{record.decreeEvidence || "-"}</div>
-      </div>
+      <details className="mt-4 rounded-2xl bg-stone-50 p-3 text-xs" style={{ color: "var(--color-muted)" }}>
+        <summary className="cursor-pointer font-semibold text-stone-700">근거 발췌문 보기</summary>
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-xl bg-white p-3"><b>법률 근거 발췌</b><br />{record.lawEvidence || "-"}</div>
+          <div className="rounded-xl bg-white p-3"><b>시행령 근거 발췌</b><br />{record.decreeEvidence || "-"}</div>
+        </div>
+      </details>
     </section>
   );
 }
@@ -234,15 +253,20 @@ export default function Home() {
   const selectedRecord = filtered.find((r) => r.id === selectedId) || filtered[0] || records[0];
 
   return (
-    <main>
+    <main className="app-shell min-h-screen">
       <section className="mx-auto max-w-7xl px-5 py-10 lg:py-14">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
-            <div className="mb-4 inline-flex rounded-full border bg-white px-3 py-1 text-xs font-medium" style={{ borderColor: "var(--color-border)", color: "var(--color-accent)" }}>공픈클로 정책분석 탐색기</div>
+            <div className="mb-4 inline-flex rounded-full border bg-white px-3 py-1 text-xs font-medium" style={{ borderColor: "var(--color-border)", color: "var(--color-accent)" }}>공픈클로 정책분석 탐색기 · 원문 대조판</div>
             <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">현장집행·감독관리 사무<br />166건 탐색기</h1>
             <p className="mt-5 max-w-3xl text-lg" style={{ color: "var(--color-muted)" }}>
-              법률상 지자체 수임 가능 유형과 시행령 현재 수임자를 교차해, 신설형·전환형·선도과제·쟁점관리 후보를 한 화면에서 검토합니다.
+              법률상 지자체 수임 가능 유형과 시행령 현재 수임자를 교차하고, 사무별 법률·시행령 원문을 좌우로 확인합니다.
             </p>
+            <div className="mt-6 flex flex-wrap gap-2 text-sm">
+              <a className="rounded-full bg-stone-900 px-4 py-2 text-white" href="#evidence">원문 대조 보기</a>
+              <a className="rounded-full border bg-white px-4 py-2" href="#matrices" style={{ borderColor: "var(--color-border)" }}>매트릭스 보기</a>
+              <a className="rounded-full border bg-white px-4 py-2" href="#tasks" style={{ borderColor: "var(--color-border)" }}>사무 검색</a>
+            </div>
           </div>
           <div className="rounded-3xl border bg-white/80 p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
             <div className="text-sm font-semibold">제출용 핵심 문장</div>
@@ -252,7 +276,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard label="분석 대상" value={data.summary.totalTasks} hint="현장집행·감독관리 사무" />
           <StatCard label="법률 기준" value={data.summary.totalLaws} hint={`${data.summary.lawTextReady}개 법률 원문 수록`} />
           <StatCard label="원문 대조" value={`${data.summary.decreeTextReady}/41`} hint="시행령 원문 수록 법률" />
@@ -261,19 +285,25 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="mx-auto grid max-w-7xl gap-4 px-5 pb-10 lg:grid-cols-3">
+        <StepCard step="1단계" title="선도과제" count={58} tone="bg-emerald-50 text-emerald-800 border-emerald-200" body="접수·보고·관리성 사무부터 우선 검토해 현장접점 논리의 성공 사례를 만든다." />
+        <StepCard step="2단계" title="중점검토" count={83} tone="bg-blue-50 text-blue-800 border-blue-200" body="조사·점검·시정명령은 전문성·인력·광역/기초 배분 설계를 붙여 검토한다." />
+        <StepCard step="3단계" title="쟁점관리" count={25} tone="bg-amber-50 text-amber-800 border-amber-200" body="처분·과태료·청문은 전국 기준과 책임소재 반박을 별도 관리한다." />
+      </section>
+
       <section className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 lg:grid-cols-3">
         <BarList title="법률상 지자체 유형" items={data.summary.byLawLocalTargetType as Count[]} />
         <BarList title="추진단계" items={data.summary.byImplementationPhase as Count[]} />
         <BarList title="정책 패키지" items={(data.summary.byPolicyPackage as Count[]).slice(0, 6)} />
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-5 px-5 pb-10">
+      <section id="matrices" className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 scroll-mt-6">
         <MatrixTable title="1차 매트릭스: 법률상 지자체 유형 × 시행령 현재 상태" description="신설형과 수임자 전환형을 가르는 본표입니다." matrix={data.matrices.lawTargetByDecree as Matrix} />
         <MatrixTable title="2차 매트릭스: 법률상 지자체 유형 × 사무 성격" description="선도과제, 중점검토, 쟁점관리 후보를 가르는 설명표입니다." matrix={data.matrices.lawTargetByCharacter as Matrix} />
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 lg:grid-cols-[0.9fr_1.1fr]">
-        <section className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+      <section id="evidence" className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 lg:grid-cols-[0.72fr_1.28fr] scroll-mt-6">
+        <section className="sticky-panel hairline rounded-3xl border bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold">법률별 프로파일</h2>
           <select className="mt-4 w-full rounded-xl border bg-white p-3" style={{ borderColor: "var(--color-border)" }} value={selectedLaw} onChange={(e) => setSelectedLaw(e.target.value)}>
             {lawProfiles.map((law) => <option key={law.law} value={law.law}>{law.law} ({law.count})</option>)}
@@ -294,9 +324,9 @@ export default function Home() {
           )}
         </section>
 
-        <section className="space-y-5">
+        <section id="tasks" className="space-y-5 scroll-mt-6">
           {selectedRecord && <EvidenceCompare record={selectedRecord} />}
-          <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+          <div className="hairline rounded-3xl border bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h2 className="text-xl font-semibold">사무 목록</h2>
             <div className="text-sm" style={{ color: "var(--color-muted)" }}>{filtered.length}건 표시</div>
@@ -308,18 +338,19 @@ export default function Home() {
           </div>
           <div className="mt-5 max-h-[760px] space-y-3 overflow-auto pr-1">
             {filtered.slice(0, 80).map((r) => (
-              <article key={r.id} onClick={() => setSelectedId(r.id)} className={`cursor-pointer rounded-2xl border p-4 ${selectedRecord?.id === r.id ? "ring-2 ring-emerald-800" : ""}`} style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface-warm)" }}>
+              <article key={r.id} onClick={() => setSelectedId(r.id)} className={`cursor-pointer rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-sm ${selectedRecord?.id === r.id ? "bg-emerald-50 ring-2 ring-emerald-800" : ""}`} style={{ borderColor: "var(--color-border)", backgroundColor: selectedRecord?.id === r.id ? undefined : "var(--color-surface-warm)" }}>
                 <div className="flex flex-wrap gap-2">
                   <Pill>{r.lawLocalTargetType}</Pill>
                   <Pill>{r.taskCharacter}</Pill>
                   <Pill className={phaseTone[r.implementationPhase] || ""}>{r.implementationPhase}</Pill>
                 </div>
-                <h3 className="mt-3 font-semibold">{r.task}</h3>
+                <h3 className="mt-3 font-semibold leading-6">{r.task}</h3>
                 <div className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>{r.law} · {r.article} · {r.ministry}</div>
                 <div className="mt-3 grid gap-2 text-xs md:grid-cols-2" style={{ color: "var(--color-muted)" }}>
                   <div>시행령 상태: <b>{r.decreeGroup}</b></div>
                   <div>권고: <b>{r.recommendedAction}</b></div>
                 </div>
+                <div className="mt-3 text-xs font-medium" style={{ color: "var(--color-accent)" }}>클릭하면 위 원문 대조 패널이 이 사무로 바뀝니다.</div>
               </article>
             ))}
           </div>

@@ -23,6 +23,37 @@ body {
   line-height: 1.6;
 }
 
+::selection {
+  background: #dbeade;
+}
+
+.app-shell {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.76), rgba(247,245,239,0.92) 26rem),
+    radial-gradient(circle at 78% 2rem, rgba(138,75,42,0.12), transparent 22rem),
+    radial-gradient(circle at 8% 5rem, rgba(31,79,70,0.14), transparent 28rem);
+}
+
+.hairline {
+  border-color: var(--color-border);
+}
+
+.law-text {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.sticky-panel {
+  position: sticky;
+  top: 1rem;
+}
+
+@media (max-width: 1023px) {
+  .sticky-panel {
+    position: static;
+  }
+}
+
 button, select, input { font: inherit; }
 button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible {
   outline: 2px solid var(--color-accent);
