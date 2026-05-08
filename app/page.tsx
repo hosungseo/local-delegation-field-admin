@@ -5,6 +5,7 @@ import data from "./data/delegation.json";
 
 type Count = { name: string; count: number };
 type Matrix = { rows: string[]; cols: string[]; values: number[][] };
+type IntegratedRow = Record<string, string>;
 type RecordItem = {
   id: string;
   ministry: string;
@@ -66,6 +67,12 @@ type LegalEntry = {
 const records = data.records as RecordItem[];
 const lawProfiles = data.lawProfiles as LawProfile[];
 const legalTexts = data.legalTexts as unknown as Record<string, LegalEntry>;
+const integrated = data.integratedMatrices as unknown as {
+  targetDecreeByCharacter: IntegratedRow[];
+  targetCharacterByDecree: IntegratedRow[];
+  topCells: IntegratedRow[];
+  summary: { cellCount: number; generatedAt: string };
+};
 
 const phaseTone: Record<string, string> = {
   "1단계-선도과제": "bg-emerald-50 text-emerald-800 border-emerald-200",
@@ -151,6 +158,62 @@ function MatrixTable({ title, description, matrix }: { title: string; descriptio
             ))}
           </tbody>
         </table>
+      </div>
+    </section>
+  );
+}
+
+function IntegratedMatrix() {
+  const rows = integrated.targetDecreeByCharacter;
+  const charCols = Object.keys(rows[0] || {}).filter((k) => !["law_local_target_type", "decree_group", "row_total", "strategy_hint"].includes(k));
+  const max = Math.max(...rows.flatMap((r) => charCols.map((c) => Number(r[c] || 0))), 1);
+  return (
+    <section className="hairline rounded-3xl border bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-accent)" }}>통합 매트릭스</div>
+          <h2 className="mt-1 text-2xl font-semibold">법률상 지자체 유형 × 시행령 현재 상태 × 사무 성격</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6" style={{ color: "var(--color-muted)" }}>
+            한 줄이 곧 검토 패키지입니다. 행은 법률상 수임 가능 지자체와 시행령 현재 상태를 묶고, 열은 사무 성격을 보여줍니다.
+          </p>
+        </div>
+        <div className="rounded-2xl bg-stone-50 px-4 py-3 text-sm text-stone-600">비어 있지 않은 조합 {integrated.summary.cellCount}개</div>
+      </div>
+      <div className="mt-5 overflow-x-auto">
+        <table className="min-w-[1080px] border-separate border-spacing-0 text-xs">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 bg-white p-2 text-left">법률상 유형</th>
+              <th className="bg-white p-2 text-left">시행령 상태</th>
+              {charCols.map((c) => <th key={c} className="min-w-24 p-2 text-left text-stone-600">{c}</th>)}
+              <th className="p-2 text-right">합계</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, idx) => (
+              <tr key={`${r.law_local_target_type}-${r.decree_group}-${idx}`}>
+                <th className="sticky left-0 z-10 border-t bg-white p-2 text-left align-top font-medium" style={{ borderColor: "var(--color-border)" }}>{r.law_local_target_type}</th>
+                <td className="border-t p-2 align-top text-stone-600" style={{ borderColor: "var(--color-border)" }}>{r.decree_group}</td>
+                {charCols.map((c) => {
+                  const v = Number(r[c] || 0);
+                  const alpha = v ? 0.1 + (v / max) * 0.55 : 0;
+                  return <td key={c} className="border-t p-2 text-center font-semibold" style={{ borderColor: "var(--color-border)", backgroundColor: v ? `rgba(31,79,70,${alpha})` : "#fafafa", color: v ? "#102f29" : "#b0aaa1" }}>{v || "·"}</td>;
+                })}
+                <td className="border-t p-2 text-right font-semibold" style={{ borderColor: "var(--color-border)" }}>{r.row_total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-5 grid gap-3 lg:grid-cols-2">
+        {integrated.topCells.slice(0, 6).map((cell) => (
+          <div key={cell.rank} className="rounded-2xl bg-stone-50 p-4 text-sm">
+            <div className="font-semibold">{cell.rank}. {cell.law_local_target_type}</div>
+            <div className="mt-1 text-stone-600">{cell.decree_group} × {cell.task_character}</div>
+            <div className="mt-2 text-2xl font-semibold">{cell.count}건</div>
+            <div className="mt-2 text-xs leading-5 text-stone-500">{cell.submission_message}</div>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -264,6 +327,7 @@ export default function Home() {
             </p>
             <div className="mt-6 flex flex-wrap gap-2 text-sm">
               <a className="rounded-full bg-stone-900 px-4 py-2 text-white" href="#evidence">원문 대조 보기</a>
+              <a className="rounded-full border bg-white px-4 py-2" href="#integrated" style={{ borderColor: "var(--color-border)" }}>통합 매트릭스</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#matrices" style={{ borderColor: "var(--color-border)" }}>매트릭스 보기</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#tasks" style={{ borderColor: "var(--color-border)" }}>사무 검색</a>
             </div>
@@ -289,6 +353,10 @@ export default function Home() {
         <StepCard step="1단계" title="선도과제" count={58} tone="bg-emerald-50 text-emerald-800 border-emerald-200" body="접수·보고·관리성 사무부터 우선 검토해 현장접점 논리의 성공 사례를 만든다." />
         <StepCard step="2단계" title="중점검토" count={83} tone="bg-blue-50 text-blue-800 border-blue-200" body="조사·점검·시정명령은 전문성·인력·광역/기초 배분 설계를 붙여 검토한다." />
         <StepCard step="3단계" title="쟁점관리" count={25} tone="bg-amber-50 text-amber-800 border-amber-200" body="처분·과태료·청문은 전국 기준과 책임소재 반박을 별도 관리한다." />
+      </section>
+
+      <section id="integrated" className="mx-auto max-w-7xl px-5 pb-10 scroll-mt-6">
+        <IntegratedMatrix />
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 lg:grid-cols-3">
