@@ -22,6 +22,8 @@ type RecordItem = {
   phaseReason: string;
   lawEvidence: string;
   decreeEvidence: string;
+  lawArticleKeys: string[];
+  decreeArticleKeys: string[];
 };
 
 type LawProfile = {
@@ -35,8 +37,35 @@ type LawProfile = {
   sampleTasks: string[];
 };
 
+type LegalArticle = {
+  key: string;
+  label: string;
+  title: string;
+  body: string;
+  paragraphs: { number: string; text: string; items: { number: string; text: string }[] }[];
+  text: string;
+};
+
+type LegalDoc = {
+  name: string;
+  mst: string;
+  kind: string;
+  articleCount: number;
+  articles: LegalArticle[];
+  articlesByKey: Record<string, LegalArticle>;
+};
+
+type LegalEntry = {
+  law: string;
+  lawDoc?: LegalDoc | null;
+  decreeDoc?: LegalDoc | null;
+  fetchStatus: string;
+  error: string;
+};
+
 const records = data.records as RecordItem[];
 const lawProfiles = data.lawProfiles as LawProfile[];
+const legalTexts = data.legalTexts as unknown as Record<string, LegalEntry>;
 
 const phaseTone: Record<string, string> = {
   "1단계-선도과제": "bg-emerald-50 text-emerald-800 border-emerald-200",
@@ -118,11 +147,77 @@ function Pill({ children, className = "" }: { children: React.ReactNode; classNa
   return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${className}`}>{children}</span>;
 }
 
+function ArticleBlock({ title, doc, keys, emptyText }: { title: string; doc?: LegalDoc | null; keys: string[]; emptyText: string }) {
+  const selected = useMemo(() => {
+    if (!doc?.articlesByKey) return [] as LegalArticle[];
+    const direct = keys.map((k) => doc.articlesByKey[k]).filter(Boolean);
+    if (direct.length > 0) return direct;
+    return doc.articles.slice(0, 2);
+  }, [doc, keys]);
+
+  return (
+    <section className="min-w-0 rounded-2xl border bg-white p-4" style={{ borderColor: "var(--color-border)" }}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-semibold">{title}</h3>
+          <p className="mt-1 text-xs" style={{ color: "var(--color-muted)" }}>{doc ? `${doc.name} · ${doc.articleCount}개 조문 수록` : emptyText}</p>
+        </div>
+        {doc?.mst && <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] text-stone-600">MST {doc.mst}</span>}
+      </div>
+      <div className="mt-4 max-h-[28rem] space-y-4 overflow-auto pr-1">
+        {!doc && <div className="rounded-xl bg-stone-50 p-4 text-sm text-stone-500">{emptyText}</div>}
+        {doc && selected.length === 0 && <div className="rounded-xl bg-stone-50 p-4 text-sm text-stone-500">매칭된 조문 키가 없습니다. 법령 전문은 데이터에 수록되어 있습니다.</div>}
+        {selected.map((a) => (
+          <article key={a.key} className="rounded-xl bg-stone-50 p-4">
+            <div className="text-sm font-semibold">{a.label}{a.title ? `(${a.title})` : ""}</div>
+            {a.body && <p className="mt-3 whitespace-pre-wrap text-sm leading-7">{a.body}</p>}
+            {a.paragraphs?.length > 0 && (
+              <div className="mt-3 space-y-2 text-sm leading-7">
+                {a.paragraphs.slice(0, 8).map((para, idx) => (
+                  <div key={`${a.key}-${idx}`}>
+                    <p>{para.number} {para.text}</p>
+                    {para.items.slice(0, 6).map((item, j) => <p key={j} className="ml-4 text-stone-600">{item.number} {item.text}</p>)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function EvidenceCompare({ record }: { record: RecordItem }) {
+  const entry = legalTexts[record.law];
+  return (
+    <section className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-accent)" }}>원문 대조 패널</div>
+          <h2 className="mt-1 text-xl font-semibold">{record.task}</h2>
+          <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>{record.law} · {record.article} · {record.ministry}</p>
+        </div>
+        <Pill className={phaseTone[record.implementationPhase] || ""}>{record.implementationPhase}</Pill>
+      </div>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <ArticleBlock title="법률 원문" doc={entry?.lawDoc} keys={record.lawArticleKeys || []} emptyText="법률 원문을 불러오지 못했습니다." />
+        <ArticleBlock title="시행령 원문" doc={entry?.decreeDoc} keys={record.decreeArticleKeys || []} emptyText={record.decreeGroup === "시행령 위임규정 없음" ? "이 사무는 시행령 위임규정 없음으로 분류되었습니다." : "시행령 원문 또는 매칭 조문을 불러오지 못했습니다."} />
+      </div>
+      <div className="mt-4 grid gap-3 text-xs lg:grid-cols-2" style={{ color: "var(--color-muted)" }}>
+        <div className="rounded-xl bg-stone-50 p-3"><b>법률 근거 발췌</b><br />{record.lawEvidence || "-"}</div>
+        <div className="rounded-xl bg-stone-50 p-3"><b>시행령 근거 발췌</b><br />{record.decreeEvidence || "-"}</div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState("전체");
   const [targetType, setTargetType] = useState("전체");
   const [selectedLaw, setSelectedLaw] = useState(lawProfiles[0]?.law || "");
+  const [selectedId, setSelectedId] = useState(records[0]?.id || "");
 
   const phases = ["전체", ...data.summary.byImplementationPhase.map((x: Count) => x.name)];
   const targetTypes = ["전체", ...data.summary.byLawLocalTargetType.map((x: Count) => x.name)];
@@ -136,7 +231,7 @@ export default function Home() {
   }, [query, phase, targetType]);
 
   const selectedProfile = lawProfiles.find((l) => l.law === selectedLaw) || lawProfiles[0];
-  const selectedRecords = records.filter((r) => r.law === selectedProfile?.law).slice(0, 12);
+  const selectedRecord = filtered.find((r) => r.id === selectedId) || filtered[0] || records[0];
 
   return (
     <main>
@@ -159,7 +254,8 @@ export default function Home() {
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="분석 대상" value={data.summary.totalTasks} hint="현장집행·감독관리 사무" />
-          <StatCard label="법률 기준" value={data.summary.totalLaws} hint="고유 법률 수" />
+          <StatCard label="법률 기준" value={data.summary.totalLaws} hint={`${data.summary.lawTextReady}개 법률 원문 수록`} />
+          <StatCard label="원문 대조" value={`${data.summary.decreeTextReady}/41`} hint="시행령 원문 수록 법률" />
           <StatCard label="신설형" value="38" hint="시행령 위임규정 신설 검토" />
           <StatCard label="전환형" value="128" hint="특행기관 등 → 지자체 전환 검토" />
         </div>
@@ -198,7 +294,9 @@ export default function Home() {
           )}
         </section>
 
-        <section className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
+        <section className="space-y-5">
+          {selectedRecord && <EvidenceCompare record={selectedRecord} />}
+          <div className="rounded-2xl border bg-white p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h2 className="text-xl font-semibold">사무 목록</h2>
             <div className="text-sm" style={{ color: "var(--color-muted)" }}>{filtered.length}건 표시</div>
@@ -210,7 +308,7 @@ export default function Home() {
           </div>
           <div className="mt-5 max-h-[760px] space-y-3 overflow-auto pr-1">
             {filtered.slice(0, 80).map((r) => (
-              <article key={r.id} className="rounded-2xl border p-4" style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface-warm)" }}>
+              <article key={r.id} onClick={() => setSelectedId(r.id)} className={`cursor-pointer rounded-2xl border p-4 ${selectedRecord?.id === r.id ? "ring-2 ring-emerald-800" : ""}`} style={{ borderColor: "var(--color-border)", backgroundColor: "var(--color-surface-warm)" }}>
                 <div className="flex flex-wrap gap-2">
                   <Pill>{r.lawLocalTargetType}</Pill>
                   <Pill>{r.taskCharacter}</Pill>
@@ -225,6 +323,7 @@ export default function Home() {
               </article>
             ))}
           </div>
+        </div>
         </section>
       </section>
     </main>
