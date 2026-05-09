@@ -324,9 +324,9 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <div className="mb-4 inline-flex rounded-full border bg-white px-3 py-1 text-xs font-medium" style={{ borderColor: "var(--color-border)", color: "var(--color-accent)" }}>공픈클로 정책분석 탐색기 · 원문 대조판</div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />210건 탐색기</h1>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />804건 탐색기</h1>
             <p className="mt-5 max-w-3xl text-lg" style={{ color: "var(--color-muted)" }}>
-              사무 성격 판단은 제외하고, 법률상 지자체 형식과 시행령상 현재 수임자 형식만으로 F1~F5를 재분류했습니다.
+              사무 성격 판단은 제외하고, 전체 804개 사무를 대상으로, 사무 성격 판단은 제외하고 법률상 지자체 형식과 시행령상 현재 수임자 형식만으로 F1~F5를 재분류했습니다.
             </p>
             <div className="mt-6 flex flex-wrap gap-2 text-sm">
               <a className="rounded-full bg-stone-900 px-4 py-2 text-white" href="#evidence">형식 근거 보기</a>
@@ -338,7 +338,7 @@ export default function Home() {
           <div className="rounded-3xl border bg-white/80 p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
             <div className="text-sm font-semibold">제출용 핵심 문장</div>
             <p className="mt-3 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-              “형식상 발굴 후보는 F1 전환후보와 F2 신설검토후보로 먼저 묶고, 이미 직접권한·기위임(F3), 법령명 정규화(F4), 형식연결 보완(F5)은 별도 검토 레이어로 분리한다. 사무 성격과 정책 타당성은 다음 단계에서 판단한다.”
+              “전체 804건 중 형식상 발굴 후보는 F1 전환후보와 F2 신설검토후보로 먼저 묶고, 이미 직접권한·기위임(F3), 법령명 정규화(F4), 형식연결 보완(F5)은 별도 검토 레이어로 분리한다. 사무 성격과 정책 타당성은 다음 단계에서 판단한다.”
             </p>
           </div>
         </div>
