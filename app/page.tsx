@@ -75,9 +75,11 @@ const integrated = data.integratedMatrices as unknown as {
 };
 
 const phaseTone: Record<string, string> = {
-  "1단계-선도과제": "bg-emerald-50 text-emerald-800 border-emerald-200",
-  "2단계-중점검토": "bg-blue-50 text-blue-800 border-blue-200",
-  "3단계-쟁점관리": "bg-amber-50 text-amber-800 border-amber-200",
+  "F1-형식상전환후보": "bg-emerald-50 text-emerald-800 border-emerald-200",
+  "F2-형식상신설검토후보": "bg-blue-50 text-blue-800 border-blue-200",
+  "F3-직접권한·기위임": "bg-amber-50 text-amber-800 border-amber-200",
+  "F4-법령명정규화": "bg-purple-50 text-purple-800 border-purple-200",
+  "F5-형식연결보완": "bg-rose-50 text-rose-800 border-rose-200",
 };
 
 function StatCard({ label, value, hint }: { label: string; value: string | number; hint: string }) {
@@ -172,9 +174,9 @@ function IntegratedMatrix() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-accent)" }}>통합 매트릭스</div>
-          <h2 className="mt-1 text-2xl font-semibold">법률상 지자체 유형 × 시행령 현재 상태 × 사무 성격</h2>
+          <h2 className="mt-1 text-2xl font-semibold">법률상 지자체 형식 × 시행령 수임자 형식 × F분류</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6" style={{ color: "var(--color-muted)" }}>
-            한 줄이 곧 검토 패키지입니다. 행은 법률상 수임 가능 지자체와 시행령 현재 상태를 묶고, 열은 사무 성격을 보여줍니다.
+            한 줄이 곧 형식 검토 패키지입니다. 행은 법률상 지자체 형식과 시행령 수임자 형식을 묶고, 열은 F분류를 보여줍니다.
           </p>
         </div>
         <div className="rounded-2xl bg-stone-50 px-4 py-3 text-sm text-stone-600">비어 있지 않은 조합 {integrated.summary.cellCount}개</div>
@@ -273,21 +275,21 @@ function EvidenceCompare({ record }: { record: RecordItem }) {
     <section className="hairline rounded-3xl border bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-accent)" }}>원문 대조 패널</div>
+          <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-accent)" }}>형식 근거 패널</div>
           <h2 className="mt-1 text-xl font-semibold">{record.task}</h2>
           <p className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>{record.law} · {record.article} · {record.ministry}</p>
         </div>
         <Pill className={phaseTone[record.implementationPhase] || ""}>{record.implementationPhase}</Pill>
       </div>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <ArticleBlock title="법률 원문" doc={entry?.lawDoc} keys={record.lawArticleKeys || []} emptyText="법률 원문을 불러오지 못했습니다." />
-        <ArticleBlock title="시행령 원문" doc={entry?.decreeDoc} keys={record.decreeArticleKeys || []} emptyText={record.decreeGroup === "시행령 위임규정 없음" ? "이 사무는 시행령 위임규정 없음으로 분류되었습니다." : "시행령 원문 또는 매칭 조문을 불러오지 못했습니다."} />
+        <ArticleBlock title="법률 형식 신호" doc={entry?.lawDoc} keys={record.lawArticleKeys || []} emptyText={record.lawEvidence || "법률상 지자체 형식 신호를 확인하세요."} />
+        <ArticleBlock title="시행령 형식 신호" doc={entry?.decreeDoc} keys={record.decreeArticleKeys || []} emptyText={record.decreeEvidence || "시행령상 수임자 형식 신호를 확인하세요."} />
       </div>
       <details className="mt-4 rounded-2xl bg-stone-50 p-3 text-xs" style={{ color: "var(--color-muted)" }}>
-        <summary className="cursor-pointer font-semibold text-stone-700">근거 발췌문 보기</summary>
+        <summary className="cursor-pointer font-semibold text-stone-700">형식 판정 근거 보기</summary>
         <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          <div className="rounded-xl bg-white p-3"><b>법률 근거 발췌</b><br />{record.lawEvidence || "-"}</div>
-          <div className="rounded-xl bg-white p-3"><b>시행령 근거 발췌</b><br />{record.decreeEvidence || "-"}</div>
+          <div className="rounded-xl bg-white p-3"><b>법률 형식</b><br />{record.lawEvidence || "-"}</div>
+          <div className="rounded-xl bg-white p-3"><b>시행령 형식</b><br />{record.decreeEvidence || "-"}</div>
         </div>
       </details>
     </section>
@@ -303,11 +305,12 @@ export default function Home() {
 
   const phases = ["전체", ...data.summary.byImplementationPhase.map((x: Count) => x.name)];
   const targetTypes = ["전체", ...data.summary.byLawLocalTargetType.map((x: Count) => x.name)];
+  const countByPhase = (name: string) => data.summary.byImplementationPhase.find((x: Count) => x.name === name)?.count || 0;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return records.filter((r) => {
-      const hay = `${r.law} ${r.task} ${r.ministry} ${r.article} ${r.policyPackage}`.toLowerCase();
+      const hay = `${r.law} ${r.task} ${r.ministry} ${r.article} ${r.policyPackage} ${r.finalClass} ${r.taskCharacter}`.toLowerCase();
       return (!q || hay.includes(q)) && (phase === "전체" || r.implementationPhase === phase) && (targetType === "전체" || r.lawLocalTargetType === targetType);
     });
   }, [query, phase, targetType]);
@@ -321,12 +324,12 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <div className="mb-4 inline-flex rounded-full border bg-white px-3 py-1 text-xs font-medium" style={{ borderColor: "var(--color-border)", color: "var(--color-accent)" }}>공픈클로 정책분석 탐색기 · 원문 대조판</div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">현장집행·감독관리 사무<br />166건 탐색기</h1>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />210건 탐색기</h1>
             <p className="mt-5 max-w-3xl text-lg" style={{ color: "var(--color-muted)" }}>
-              법률상 지자체 수임 가능 유형과 시행령 현재 수임자를 교차하고, 사무별 법률·시행령 원문을 좌우로 확인합니다.
+              사무 성격 판단은 제외하고, 법률상 지자체 형식과 시행령상 현재 수임자 형식만으로 F1~F5를 재분류했습니다.
             </p>
             <div className="mt-6 flex flex-wrap gap-2 text-sm">
-              <a className="rounded-full bg-stone-900 px-4 py-2 text-white" href="#evidence">원문 대조 보기</a>
+              <a className="rounded-full bg-stone-900 px-4 py-2 text-white" href="#evidence">형식 근거 보기</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#integrated" style={{ borderColor: "var(--color-border)" }}>통합 매트릭스</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#matrices" style={{ borderColor: "var(--color-border)" }}>매트릭스 보기</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#tasks" style={{ borderColor: "var(--color-border)" }}>사무 검색</a>
@@ -335,24 +338,24 @@ export default function Home() {
           <div className="rounded-3xl border bg-white/80 p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
             <div className="text-sm font-semibold">제출용 핵심 문장</div>
             <p className="mt-3 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-              “현장집행·감독관리 166건은 일괄 이양보다 단계적 패키지 접근이 적절하다. 접수·보고·관리성 사무는 선도과제로, 조사·시정명령은 중점검토로, 처분·제재·과태료는 쟁점관리 후보로 분리해 추진할 수 있다.”
+              “형식상 발굴 후보는 F1 전환후보와 F2 신설검토후보로 먼저 묶고, 이미 직접권한·기위임(F3), 법령명 정규화(F4), 형식연결 보완(F5)은 별도 검토 레이어로 분리한다. 사무 성격과 정책 타당성은 다음 단계에서 판단한다.”
             </p>
           </div>
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <StatCard label="분석 대상" value={data.summary.totalTasks} hint="현장집행·감독관리 사무" />
+          <StatCard label="분석 대상" value={data.summary.totalTasks} hint="법률-시행령 형식 재분류" />
           <StatCard label="법률 기준" value={data.summary.totalLaws} hint={`${data.summary.lawTextReady}개 법률 원문 수록`} />
-          <StatCard label="원문 대조" value={`${data.summary.decreeTextReady}/41`} hint="시행령 원문 수록 법률" />
-          <StatCard label="신설형" value="38" hint="시행령 위임규정 신설 검토" />
-          <StatCard label="전환형" value="128" hint="특행기관 등 → 지자체 전환 검토" />
+          <StatCard label="F1+F2 후보" value={countByPhase("F1-형식상전환후보") + countByPhase("F2-형식상신설검토후보")} hint="사무 성격 판단 전 형식상 후보" />
+          <StatCard label="F2 신설검토" value={data.summary.byImplementationPhase.find((x: Count) => x.name === "F2-형식상신설검토후보")?.count || 0} hint="형식상 신설검토" />
+          <StatCard label="F1 전환후보" value={data.summary.byImplementationPhase.find((x: Count) => x.name === "F1-형식상전환후보")?.count || 0} hint="형식상 전환후보" />
         </div>
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-4 px-5 pb-10 lg:grid-cols-3">
-        <StepCard step="1단계" title="선도과제" count={58} tone="bg-emerald-50 text-emerald-800 border-emerald-200" body="접수·보고·관리성 사무부터 우선 검토해 현장접점 논리의 성공 사례를 만든다." />
-        <StepCard step="2단계" title="중점검토" count={83} tone="bg-blue-50 text-blue-800 border-blue-200" body="조사·점검·시정명령은 전문성·인력·광역/기초 배분 설계를 붙여 검토한다." />
-        <StepCard step="3단계" title="쟁점관리" count={25} tone="bg-amber-50 text-amber-800 border-amber-200" body="처분·과태료·청문은 전국 기준과 책임소재 반박을 별도 관리한다." />
+        <StepCard step="F1" title="형식상 전환후보" count={countByPhase("F1-형식상전환후보")} tone="bg-emerald-50 text-emerald-800 border-emerald-200" body="법률은 지자체 형식, 시행령은 비지자체·특행기관 등인 전환 검토군입니다." />
+        <StepCard step="F2" title="형식상 신설검토" count={countByPhase("F2-형식상신설검토후보")} tone="bg-blue-50 text-blue-800 border-blue-200" body="법률은 지자체 형식이나 시행령 대응 수임 규정이 없거나 미확인인 신설 검토군입니다." />
+        <StepCard step="F3" title="직접권한·기위임" count={countByPhase("F3-직접권한·기위임")} tone="bg-amber-50 text-amber-800 border-amber-200" body="법률 또는 시행령 형식상 이미 지자체 직접권한/기위임으로 보이는 별도표기군입니다." />
       </section>
 
       <section id="integrated" className="mx-auto max-w-7xl px-5 pb-10 scroll-mt-6">
@@ -361,13 +364,13 @@ export default function Home() {
 
       <section className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 lg:grid-cols-3">
         <BarList title="법률상 지자체 유형" items={data.summary.byLawLocalTargetType as Count[]} />
-        <BarList title="추진단계" items={data.summary.byImplementationPhase as Count[]} />
-        <BarList title="정책 패키지" items={(data.summary.byPolicyPackage as Count[]).slice(0, 6)} />
+        <BarList title="F분류" items={data.summary.byImplementationPhase as Count[]} />
+        <BarList title="분류 패키지" items={(data.summary.byPolicyPackage as Count[]).slice(0, 6)} />
       </section>
 
       <section id="matrices" className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 scroll-mt-6">
-        <MatrixTable title="1차 매트릭스: 법률상 지자체 유형 × 시행령 현재 상태" description="신설형과 수임자 전환형을 가르는 본표입니다." matrix={data.matrices.lawTargetByDecree as Matrix} />
-        <MatrixTable title="2차 매트릭스: 법률상 지자체 유형 × 사무 성격" description="선도과제, 중점검토, 쟁점관리 후보를 가르는 설명표입니다." matrix={data.matrices.lawTargetByCharacter as Matrix} />
+        <MatrixTable title="1차 매트릭스: 법률상 지자체 형식 × 시행령 수임자 형식" description="F1 전환후보, F2 신설검토, F3 직접권한/기위임을 가르는 본표입니다." matrix={data.matrices.lawTargetByDecree as Matrix} />
+        <MatrixTable title="2차 매트릭스: 법률상 지자체 형식 × F분류" description="형식상 전환후보, 형식상 신설검토, 직접권한·기위임 후보를 가르는 설명표입니다." matrix={data.matrices.lawTargetByCharacter as Matrix} />
       </section>
 
       <section id="evidence" className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 lg:grid-cols-[0.72fr_1.28fr] scroll-mt-6">
@@ -396,11 +399,11 @@ export default function Home() {
           {selectedRecord && <EvidenceCompare record={selectedRecord} />}
           <div className="hairline rounded-3xl border bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-xl font-semibold">사무 목록</h2>
+            <h2 className="text-xl font-semibold">F분류 사무 목록</h2>
             <div className="text-sm" style={{ color: "var(--color-muted)" }}>{filtered.length}건 표시</div>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            <input className="rounded-xl border bg-white p-3 md:col-span-1" style={{ borderColor: "var(--color-border)" }} placeholder="법률·사무 검색" value={query} onChange={(e) => setQuery(e.target.value)} />
+            <input className="rounded-xl border bg-white p-3 md:col-span-1" style={{ borderColor: "var(--color-border)" }} placeholder="법률·사무·F분류 검색" value={query} onChange={(e) => setQuery(e.target.value)} />
             <select className="rounded-xl border bg-white p-3" style={{ borderColor: "var(--color-border)" }} value={targetType} onChange={(e) => setTargetType(e.target.value)}>{targetTypes.map((x: string) => <option key={x}>{x}</option>)}</select>
             <select className="rounded-xl border bg-white p-3" style={{ borderColor: "var(--color-border)" }} value={phase} onChange={(e) => setPhase(e.target.value)}>{phases.map((x: string) => <option key={x}>{x}</option>)}</select>
           </div>
@@ -416,9 +419,9 @@ export default function Home() {
                 <div className="mt-1 text-sm" style={{ color: "var(--color-muted)" }}>{r.law} · {r.article} · {r.ministry}</div>
                 <div className="mt-3 grid gap-2 text-xs md:grid-cols-2" style={{ color: "var(--color-muted)" }}>
                   <div>시행령 상태: <b>{r.decreeGroup}</b></div>
-                  <div>권고: <b>{r.recommendedAction}</b></div>
+                  <div>형식판정: <b>{r.recommendedAction}</b></div>
                 </div>
-                <div className="mt-3 text-xs font-medium" style={{ color: "var(--color-accent)" }}>클릭하면 위 원문 대조 패널이 이 사무로 바뀝니다.</div>
+                <div className="mt-3 text-xs font-medium" style={{ color: "var(--color-accent)" }}>클릭하면 위 형식 근거 패널이 이 사무로 바뀝니다.</div>
               </article>
             ))}
           </div>
