@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "현장집행·감독관리 사무 166건 탐색기",
-  description: "법률상 지자체 수임 가능 유형과 시행령 현재 수임자를 교차 분석한 정적 탐색기",
+  title: "법률-시행령 형식 기준 210건 F분류 탐색기",
+  description: "사무 성격 판단을 제외하고 법률상 지자체 형식과 시행령 수임자 형식만으로 재분류한 F분류 탐색기",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
