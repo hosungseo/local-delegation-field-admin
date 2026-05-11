@@ -324,7 +324,7 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <div className="mb-4 inline-flex rounded-full border bg-white px-3 py-1 text-xs font-medium" style={{ borderColor: "var(--color-border)", color: "var(--color-accent)" }}>공픈클로 정책분석 탐색기 · 원문 대조판</div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />804건 최종분류 탐색기</h1>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />804건 최종 F분류 탐색기</h1>
             <p className="mt-5 max-w-3xl text-lg" style={{ color: "var(--color-muted)" }}>
               사무 성격 판단은 제외하고, 전체 804개 사무를 대상으로 F4 제거와 F5 회복매칭을 반영한 최종 F분류입니다. 사무 성격 판단은 별도 단계로 남겨두었습니다.
             </p>

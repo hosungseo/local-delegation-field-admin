@@ -3,3 +3,6 @@ out/
 node_modules/
 .DS_Store
 .env*
+
+# generated law.go.kr fetch cache
+app/data/legal-text-cache.json
