@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import data from "./data/delegation.json";
+import data804 from "./data/delegation-804.json";
+import data557 from "./data/delegation-557.json";
 
 type Count = { name: string; count: number };
 type Matrix = { rows: string[]; cols: string[]; values: number[][] };
@@ -64,15 +65,13 @@ type LegalEntry = {
   error: string;
 };
 
-const records = data.records as RecordItem[];
-const lawProfiles = data.lawProfiles as LawProfile[];
-const legalTexts = data.legalTexts as unknown as Record<string, LegalEntry>;
-const integrated = data.integratedMatrices as unknown as {
-  targetDecreeByCharacter: IntegratedRow[];
-  targetCharacterByDecree: IntegratedRow[];
-  topCells: IntegratedRow[];
-  summary: { cellCount: number; generatedAt: string };
-};
+type Dataset = Record<string, any>;
+
+const datasets = {
+  "557": { label: "557 의견조회 기준", short: "557", data: data557 as unknown as Dataset, note: "최신 메일 첨부 엑셀 557개 기준" },
+  "804": { label: "804 전체 기준", short: "804", data: data804 as unknown as Dataset, note: "전체 804건 최종 F분류 기준" },
+} as const;
+type DatasetKey = keyof typeof datasets;
 
 const phaseTone: Record<string, string> = {
   "F1-형식상전환후보": "bg-emerald-50 text-emerald-800 border-emerald-200",
@@ -165,7 +164,7 @@ function MatrixTable({ title, description, matrix }: { title: string; descriptio
   );
 }
 
-function IntegratedMatrix() {
+function IntegratedMatrix({ integrated }: { integrated: { targetDecreeByCharacter: IntegratedRow[]; targetCharacterByDecree: IntegratedRow[]; topCells: IntegratedRow[]; summary: { cellCount: number; generatedAt: string } } }) {
   const rows = integrated.targetDecreeByCharacter;
   const charCols = Object.keys(rows[0] || {}).filter((k) => !["law_local_target_type", "decree_group", "row_total", "strategy_hint"].includes(k));
   const max = Math.max(...rows.flatMap((r) => charCols.map((c) => Number(r[c] || 0))), 1);
@@ -269,7 +268,7 @@ function ArticleBlock({ title, doc, keys, emptyText }: { title: string; doc?: Le
   );
 }
 
-function EvidenceCompare({ record }: { record: RecordItem }) {
+function EvidenceCompare({ record, legalTexts }: { record: RecordItem; legalTexts: Record<string, LegalEntry> }) {
   const entry = legalTexts[record.law];
   return (
     <section className="hairline rounded-3xl border bg-white p-5 shadow-sm">
@@ -297,11 +296,17 @@ function EvidenceCompare({ record }: { record: RecordItem }) {
 }
 
 export default function Home() {
+  const [datasetKey, setDatasetKey] = useState<DatasetKey>("557");
+  const data = datasets[datasetKey].data;
+  const records = data.records as RecordItem[];
+  const lawProfiles = data.lawProfiles as LawProfile[];
+  const legalTexts = data.legalTexts as unknown as Record<string, LegalEntry>;
+  const integrated = data.integratedMatrices as unknown as { targetDecreeByCharacter: IntegratedRow[]; targetCharacterByDecree: IntegratedRow[]; topCells: IntegratedRow[]; summary: { cellCount: number; generatedAt: string } };
   const [query, setQuery] = useState("");
   const [phase, setPhase] = useState("전체");
   const [targetType, setTargetType] = useState("전체");
-  const [selectedLaw, setSelectedLaw] = useState(lawProfiles[0]?.law || "");
-  const [selectedId, setSelectedId] = useState(records[0]?.id || "");
+  const [selectedLaw, setSelectedLaw] = useState("");
+  const [selectedId, setSelectedId] = useState("");
 
   const phases = ["전체", ...data.summary.byImplementationPhase.map((x: Count) => x.name)];
   const targetTypes = ["전체", ...data.summary.byLawLocalTargetType.map((x: Count) => x.name)];
@@ -317,6 +322,8 @@ export default function Home() {
 
   const selectedProfile = lawProfiles.find((l) => l.law === selectedLaw) || lawProfiles[0];
   const selectedRecord = filtered.find((r) => r.id === selectedId) || filtered[0] || records[0];
+  const f1 = countByPhase("F1-형식상전환후보");
+  const f2 = countByPhase("F2-형식상신설검토후보");
 
   return (
     <main className="app-shell min-h-screen">
@@ -324,12 +331,17 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <div className="mb-4 inline-flex rounded-full border bg-white px-3 py-1 text-xs font-medium" style={{ borderColor: "var(--color-border)", color: "var(--color-accent)" }}>공픈클로 정책분석 탐색기 · 원문 대조판</div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />557개 의견조회 대상 F분류 탐색기</h1>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />{datasetKey === "557" ? "557개 의견조회 대상" : "804건 전체"} F분류 탐색기</h1>
             <p className="mt-5 max-w-3xl text-lg" style={{ color: "var(--color-muted)" }}>
-              최신 수신 엑셀 「260512_3차일괄이양 의견조회 대상(특행 포함)_557개」를 기준으로 법률-시행령 형식만 다시 분류했습니다. 사무 성격 판단은 별도 단계로 남겨두었습니다.
+              {datasetKey === "557" ? "최신 수신 엑셀 「260512_3차일괄이양 의견조회 대상(특행 포함)_557개」 기준입니다." : "기존 전체 804건 최종 F분류 기준입니다."} 804 전체 기준과 557 의견조회 기준을 분리해 같은 화면 구조로 비교할 수 있게 했습니다.
             </p>
             <div className="mt-6 flex flex-wrap gap-2 text-sm">
-              <a className="rounded-full bg-stone-900 px-4 py-2 text-white" href="#evidence">형식 근거 보기</a>
+              {(Object.keys(datasets) as DatasetKey[]).map((key) => (
+                <button key={key} onClick={() => { setDatasetKey(key); setSelectedLaw(""); setSelectedId(""); }} className={`rounded-full px-4 py-2 ${datasetKey === key ? "bg-stone-900 text-white" : "border bg-white"}`} style={datasetKey === key ? undefined : { borderColor: "var(--color-border)" }}>
+                  {datasets[key].label}
+                </button>
+              ))}
+              <a className="rounded-full border bg-white px-4 py-2" href="#evidence" style={{ borderColor: "var(--color-border)" }}>형식 근거 보기</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#integrated" style={{ borderColor: "var(--color-border)" }}>통합 매트릭스</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#matrices" style={{ borderColor: "var(--color-border)" }}>매트릭스 보기</a>
               <a className="rounded-full border bg-white px-4 py-2" href="#tasks" style={{ borderColor: "var(--color-border)" }}>사무 검색</a>
@@ -338,7 +350,7 @@ export default function Home() {
           <div className="rounded-3xl border bg-white/80 p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
             <div className="text-sm font-semibold">제출용 핵심 문장</div>
             <p className="mt-3 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-              “557개 의견조회 대상 중 형식상 발굴 후보는 F1 전환후보와 F2 신설검토후보로 묶고, 이미 직접권한·기위임(F3)과 형식연결 보완(F5)은 별도 레이어로 분리한다. 미매칭 항목은 후속 법령명·시행령 조문 확인 대상으로 둔다.”
+              “현재 화면은 {datasets[datasetKey].label}이다. 형식상 발굴 후보는 F1 전환후보와 F2 신설검토후보로 묶고, 직접권한·기위임(F3)과 형식연결 보완(F5)은 별도 레이어로 분리한다.”
             </p>
           </div>
         </div>
@@ -346,7 +358,7 @@ export default function Home() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard label="분석 대상" value={data.summary.totalTasks} hint="법률-시행령 형식 재분류" />
           <StatCard label="법률 기준" value={data.summary.totalLaws} hint={`${data.summary.lawTextReady}개 법률 원문 수록`} />
-          <StatCard label="F1+F2 후보" value={countByPhase("F1-형식상전환후보") + countByPhase("F2-형식상신설검토후보")} hint="사무 성격 판단 전 형식상 후보" />
+          <StatCard label="F1+F2 후보" value={f1 + f2} hint="사무 성격 판단 전 형식상 후보" />
           <StatCard label="F2 신설검토" value={data.summary.byImplementationPhase.find((x: Count) => x.name === "F2-형식상신설검토후보")?.count || 0} hint="형식상 신설검토" />
           <StatCard label="F1 전환후보" value={data.summary.byImplementationPhase.find((x: Count) => x.name === "F1-형식상전환후보")?.count || 0} hint="형식상 전환후보" />
         </div>
@@ -359,7 +371,7 @@ export default function Home() {
       </section>
 
       <section id="integrated" className="mx-auto max-w-7xl px-5 pb-10 scroll-mt-6">
-        <IntegratedMatrix />
+        <IntegratedMatrix integrated={integrated} />
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-5 px-5 pb-10 lg:grid-cols-3">
@@ -396,7 +408,7 @@ export default function Home() {
         </section>
 
         <section id="tasks" className="space-y-5 scroll-mt-6">
-          {selectedRecord && <EvidenceCompare record={selectedRecord} />}
+          {selectedRecord && <EvidenceCompare record={selectedRecord} legalTexts={legalTexts} />}
           <div className="hairline rounded-3xl border bg-white p-5 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h2 className="text-xl font-semibold">F분류 사무 목록</h2>
