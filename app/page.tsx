@@ -324,9 +324,9 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div>
             <div className="mb-4 inline-flex rounded-full border bg-white px-3 py-1 text-xs font-medium" style={{ borderColor: "var(--color-border)", color: "var(--color-accent)" }}>공픈클로 정책분석 탐색기 · 원문 대조판</div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />804건 최종 F분류 탐색기</h1>
+            <h1 className="text-4xl font-semibold leading-tight tracking-tight lg:text-6xl">법률-시행령 형식 기준<br />557개 의견조회 대상 F분류 탐색기</h1>
             <p className="mt-5 max-w-3xl text-lg" style={{ color: "var(--color-muted)" }}>
-              사무 성격 판단은 제외하고, 전체 804개 사무를 대상으로 F4 제거와 F5 회복매칭을 반영한 최종 F분류입니다. 사무 성격 판단은 별도 단계로 남겨두었습니다.
+              최신 수신 엑셀 「260512_3차일괄이양 의견조회 대상(특행 포함)_557개」를 기준으로 법률-시행령 형식만 다시 분류했습니다. 사무 성격 판단은 별도 단계로 남겨두었습니다.
             </p>
             <div className="mt-6 flex flex-wrap gap-2 text-sm">
               <a className="rounded-full bg-stone-900 px-4 py-2 text-white" href="#evidence">형식 근거 보기</a>
@@ -338,7 +338,7 @@ export default function Home() {
           <div className="rounded-3xl border bg-white/80 p-5 shadow-sm" style={{ borderColor: "var(--color-border)" }}>
             <div className="text-sm font-semibold">제출용 핵심 문장</div>
             <p className="mt-3 text-sm leading-7" style={{ color: "var(--color-muted)" }}>
-              “전체 804건 중 형식상 발굴 후보는 F1 전환후보와 F2 신설검토후보로 묶고, 이미 직접권한·기위임(F3)과 형식연결 보완(F5)은 별도 레이어로 분리한다. F4는 정규화 후 F3/F5로 재배치했다.”
+              “557개 의견조회 대상 중 형식상 발굴 후보는 F1 전환후보와 F2 신설검토후보로 묶고, 이미 직접권한·기위임(F3)과 형식연결 보완(F5)은 별도 레이어로 분리한다. 미매칭 항목은 후속 법령명·시행령 조문 확인 대상으로 둔다.”
             </p>
           </div>
         </div>
